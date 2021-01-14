@@ -840,8 +840,8 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
      */
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback) {
-        // intercept the record, which can be potentially modified; this method does not throw exceptions
-        //Ê×ÏÈ¾­¹ıÀ¹½ØÆ÷´¦Àí
+        // intercept the record, which can be potentially modified; this method does not throw exception
+        //å¸¦æœ‰å›è°ƒæ“ä½œçš„å¼‚æ­¥å‘é€ï¼Œä¸»è¦æ˜¯è¿›è¡Œä¸€äº›ç»Ÿè®¡æ“ä½œ
         ProducerRecord<K, V> interceptedRecord = this.interceptors.onSend(record);
         return doSend(interceptedRecord, callback);
     }
@@ -859,7 +859,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
     private Future<RecordMetadata> doSend(ProducerRecord<K, V> record, Callback callback) {
         TopicPartition tp = null;
         try {
-            //producerÊÇ·ñ¹Ø±Õ
+            //producerï¿½Ç·ï¿½Ø±ï¿½
             throwIfProducerClosed();
             // first make sure the metadata for the topic is available
             ClusterAndWaitTime clusterAndWaitTime;
@@ -874,7 +874,7 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
             Cluster cluster = clusterAndWaitTime.cluster;
             byte[] serializedKey;
             try {
-//               //ĞòÁĞ»¯key
+//               //ï¿½ï¿½ï¿½Ğ»ï¿½key
                 serializedKey = keySerializer.serialize(record.topic(), record.headers(), record.key());
             } catch (ClassCastException cce) {
                 throw new SerializationException("Can't convert key of class " + record.key().getClass().getName() +
@@ -889,9 +889,9 @@ public class KafkaProducer<K, V> implements Producer<K, V> {
                         " to class " + producerConfig.getClass(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG).getName() +
                         " specified in value.serializer", cce);
             }
-            //¸ù¾İkey valueµÈ¼ÆËãpartition£¬Ä¬ÈÏÊ¹ÓÃDefaultPartitioner·ÖÇøÆ÷
+            //ï¿½ï¿½ï¿½ï¿½key valueï¿½È¼ï¿½ï¿½ï¿½partitionï¿½ï¿½Ä¬ï¿½ï¿½Ê¹ï¿½ï¿½DefaultPartitionerï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             int partition = partition(record, serializedKey, serializedValue, cluster);
-            //´´½¨topicpartition
+            //ï¿½ï¿½ï¿½ï¿½topicpartition
             tp = new TopicPartition(record.topic(), partition);
 
             setReadOnly(record.headers());
