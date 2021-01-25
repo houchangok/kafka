@@ -441,6 +441,7 @@ public class NetworkClient implements KafkaClient {
 
     private void doSend(ClientRequest clientRequest, boolean isInternalRequest, long now) {
         ensureActive();
+        //消息发送到哪个node
         String nodeId = clientRequest.destination();
         if (!isInternalRequest) {
             // If this request came from outside the NetworkClient, validate
@@ -540,12 +541,19 @@ public class NetworkClient implements KafkaClient {
         // process completed actions
         long updatedNow = this.time.milliseconds();
         List<ClientResponse> responses = new ArrayList<>();
+        //IO多路复用
         handleCompletedSends(responses, updatedNow);
+
         handleCompletedReceives(responses, updatedNow);
+
         handleDisconnections(responses, updatedNow);
+
         handleConnections();
+
         handleInitiateApiVersionRequests(updatedNow);
+
         handleTimedOutRequests(responses, updatedNow);
+
         completeResponses(responses);
 
         return responses;

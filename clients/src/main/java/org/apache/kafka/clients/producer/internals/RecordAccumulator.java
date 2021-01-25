@@ -193,8 +193,9 @@ public final class RecordAccumulator {
         ByteBuffer buffer = null;
         if (headers == null) headers = Record.EMPTY_HEADERS;
         try {
-            // check if we have an in-progress batch
+            // check if we have an in-progress batch    <TopicPartition,Deque<ProducerBatch>
             Deque<ProducerBatch> dq = getOrCreateDeque(tp);
+            //加锁，防止并发问题
             synchronized (dq) {
                 if (closed)
                     throw new KafkaException("Producer closed while send in progress");
@@ -444,7 +445,7 @@ public final class RecordAccumulator {
         for (Map.Entry<TopicPartition, Deque<ProducerBatch>> entry : this.batches.entrySet()) {
             TopicPartition part = entry.getKey();
             Deque<ProducerBatch> deque = entry.getValue();
-
+            // leader partition 所在的节点位置
             Node leader = cluster.leaderFor(part);
             synchronized (deque) {
                 if (leader == null && !deque.isEmpty()) {
@@ -521,6 +522,7 @@ public final class RecordAccumulator {
 
     private List<ProducerBatch> drainBatchesForOneNode(Cluster cluster, Node node, int maxSize, long now) {
         int size = 0;
+        //该node上面的TopicPartition信息
         List<PartitionInfo> parts = cluster.partitionsForNode(node.id());
         List<ProducerBatch> ready = new ArrayList<>();
         /* to make starvation less likely this loop doesn't start at 0 */
@@ -533,7 +535,7 @@ public final class RecordAccumulator {
             // Only proceed if the partition has no in-flight batches.
             if (isMuted(tp, now))
                 continue;
-
+            //tp关联的待发送的缓存消息
             Deque<ProducerBatch> deque = getDeque(tp);
             if (deque == null)
                 continue;
@@ -555,6 +557,7 @@ public final class RecordAccumulator {
                     // compression; in this case we will still eventually send this batch in a single request
                     break;
                 } else {
+
                     if (shouldStopDrainBatchesForPartition(first, tp))
                         break;
 
